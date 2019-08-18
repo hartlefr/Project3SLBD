@@ -17,7 +17,7 @@ perm <- function(train, perc) {
 
 
 
-lambda = c(seq(0,0.5,0.01))
+lambda = c(seq(0,1.5,0.02))
 #lambda = c(seq(0,1,0.1))
 N = 300
 P = 100
@@ -43,7 +43,7 @@ for(i in 1:length(ml)){
   for(j in 1:triesPerMl){ 
     #cvreg <- cv.glmnet(data, perm(y,ml[i]), lambda = lambda, alpha = 1)
     #result[i,] <- result[i,]+cvreg$cvm
-    lasso.mod <- glmnet(training, perm(ytraining, ml[i]), alpha = 1, lambda = lambda)
+    lasso.mod <- glmnet(training, perm(ytraining, ml[i]), alpha = 0, lambda = lambda)
     lasso.pred <- predict(lasso.mod, rev(lambda), newx = test)
     sme<-apply(lasso.pred,2,function(x) (mean((x-ytest)^2))^(1/2))
     result[i,] <- result[i,]+sme
@@ -51,7 +51,7 @@ for(i in 1:length(ml)){
   result[i,] <- result[i,]/triesPerMl
   result <- rbind(result,rep(0,length(lambda)))
   #print(result)
-  #print(length(lambda)+1-apply(result, 1,which.min)[i]) ##index of lambda
+  print(length(lambda)+1-apply(result, 1,which.min)[i]) ##index of lambda
   
   
   ### nonzero coefficients (usually only reasonable for lasso)
@@ -68,7 +68,7 @@ for(i in 1:length(ml)){
 }
 
 print("sme")
-print(mean(result[length(lambda)+1-apply(result, 1,which.min)])) #list of mse
+print(mean(result[length(lambda)+1-apply(result, 1,which.min)])) #list of sme
 
 #lasso.mod <- glmnet(data, perm(y, 0.3), alpha = 1, lambda = lambda)
 #lasso.pred <- predict(lasso.mod, lambda, newx = test)
@@ -91,4 +91,3 @@ hm[,2] <- lambda[length(lambda)+1-hm[,2]]
 ggplot(hm, aes(Var1,Var2)) + geom_tile(aes(fill=value), colour = "white") +  scale_fill_gradient(low = "white", high = "steelblue") + labs(x = "Mislabeling", y = "lambda") 
 ggplot(tibble(mislabeling=ml,lambda=bestLambda),aes(mislabeling,bestLambda))+geom_point()
 #coef(lasso.mod)[1:100,1]
-
